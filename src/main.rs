@@ -34,7 +34,10 @@ fn main() {
     //     ext_descriptor, int_descriptor,
     // );
     let mut wallet_2 = utils::get_wallet(wallet_descriptor, DB_PATH_2);
-    // println!("address: {}", utils::get_address(&mut wallet_1, DB_PATH_2).address);
-    println!("wallet amount: {}", wallet_1.balance().total().to_sat());
+    // println!(
+    //     "address: {}",
+    //     utils::get_address(&mut wallet_2, DB_PATH_2).address
+    // );
+    println!("wallet amount: {}", wallet_2.balance().total().to_sat());
     println!("\nEnd");
 }

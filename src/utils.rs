@@ -93,19 +93,23 @@ pub fn get_wallet(
 
     match is_new_wallet {
         true => {
+            println!("Full scan");
             let full_scan_request: FullScanRequestBuilder<KeychainKind> = wallet.start_full_scan();
             let update: FullScanResponse<KeychainKind> = client
                 .full_scan(full_scan_request, STOP_GAP, PARALLEL_REQUESTS)
                 .expect("full scan");
             wallet.apply_update(update).unwrap();
+            wallet.persist(&mut connection).expect("save to db");
         }
         false => {
+            println!("Sync");
             let sync_request: SyncRequestBuilder<(KeychainKind, u32)> =
                 wallet.start_sync_with_revealed_spks();
             let update: SyncResponse = client
                 .sync(sync_request, PARALLEL_REQUESTS)
                 .expect("create udpate");
             wallet.apply_update(update).unwrap();
+            wallet.persist(&mut connection).expect("save to db");
         }
     }
 
