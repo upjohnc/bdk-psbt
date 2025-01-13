@@ -6,4 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bdk_esplora = { version = "0.20.1", features = ["blocking"] }
 bdk_wallet = { version = "1.0.0", features = ["keys-bip39", "rusqlite"] }
