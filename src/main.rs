@@ -1,5 +1,11 @@
 mod utils;
-use bdk_wallet::bitcoin::Network;
+use bdk_wallet::{
+    bitcoin::{Network, Psbt},
+    psbt::PsbtUtils,
+    SignOptions,
+};
+
+use crate::utils::create_psbt;
 
 const STOP_GAP: usize = 50;
 const PARALLEL_REQUESTS: usize = 1;
@@ -24,6 +30,17 @@ fn main() {
     let mut wallet_1 = utils::get_wallet(wallet_descriptor, DB_PATH_1);
     // println!("address: {}", utils::get_address(&mut wallet_1, DB_PATH_1).address);
     println!("wallet amount: {}", wallet_1.balance().total().to_sat());
+    let mut psbt_1 = create_psbt(&mut wallet_1);
+    // let result_1 = wallet_1
+    //     .finalize_psbt(&mut psbt_1, SignOptions::default())
+    //     .expect("finalize psbt");
+    // dbg!(result_1);
+    // dbg!(psbt_1.clone());
+    // assert!(result_1);
+    let finalized = wallet_1
+        .sign(&mut psbt_1, SignOptions::default())
+        .expect("signing happend");
+    assert!(finalized);
 
     let seed_2 = utils::wallet_descriptor_from_mnemonic(SEED_PHRASE_2);
     let wallet_descriptor = utils::create_descriptor(seed_2);
@@ -39,5 +56,17 @@ fn main() {
     //     utils::get_address(&mut wallet_2, DB_PATH_2).address
     // );
     println!("wallet amount: {}", wallet_2.balance().total().to_sat());
+    let mut psbt_2 = create_psbt(&mut wallet_2);
+    // let result_2 = wallet_2
+    //     .finalize_psbt(&mut psbt_2, SignOptions::default())
+    //     .expect("finalize psbt");
+
+    let finalized = wallet_2
+        .sign(&mut psbt_2, SignOptions::default())
+        .expect("signing happend");
+    assert!(finalized);
+    let t = psbt_2.combine(psbt_1).expect("combined done");
+    dbg!(t);
+
     println!("\nEnd");
 }

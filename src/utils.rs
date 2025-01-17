@@ -2,6 +2,8 @@ use super::{NETWORK, PARALLEL_REQUESTS, STOP_GAP};
 use bdk_esplora::esplora_client::{BlockingClient, Builder};
 use bdk_esplora::EsploraExt;
 use bdk_wallet::bitcoin::bip32::Xpriv;
+use bdk_wallet::bitcoin::psbt::Input;
+use bdk_wallet::bitcoin::{Address, Amount, OutPoint, Psbt, Txid, Weight};
 use bdk_wallet::chain::spk_client::{
     FullScanRequestBuilder, FullScanResponse, SyncRequestBuilder, SyncResponse,
 };
@@ -13,6 +15,7 @@ use bdk_wallet::template::{Bip86, DescriptorTemplate};
 use bdk_wallet::{AddressInfo, Wallet};
 use bdk_wallet::{KeychainKind, PersistedWallet};
 use std::collections::BTreeMap;
+use std::str::FromStr;
 
 pub fn wallet_descriptor_from_mnemonic(seed_phrase: &str) -> [u8; 64] {
     let mnemonic = Mnemonic::parse(seed_phrase).expect("Seed phrase");
@@ -122,4 +125,31 @@ pub fn get_address(wallet: &mut PersistedWallet<Connection>, db_path: &str) -> A
     let mut connection = Connection::open(db_path).expect("dbpath");
     wallet.persist(&mut connection).expect("good persist");
     address
+}
+
+pub fn create_psbt(wallet: &mut Wallet) -> Psbt {
+    let address = Address::from_str("tb1qd28npep0s8frcm3y7dxqajkcy2m40eysplyr9v")
+        .unwrap()
+        .require_network(NETWORK)
+        .unwrap();
+    let send_amount: Amount = Amount::from_sat(500);
+    let mut tx_builder = wallet.build_tx();
+    tx_builder.add_recipient(address.script_pubkey(), send_amount);
+    // add 991eb949ac8bc7e59e2a53be7f2dc869077fb6403d93c8d892c75e483eb7e396:0
+    // let outpoint = OutPoint::new(
+    //     Txid::from_str("991eb949ac8bc7e59e2a53be7f2dc869077fb6403d93c8d892c75e483eb7e396")
+    //         .expect("Hashi it"),
+    //     0,
+    // );
+    // let t = tx_builder.add_foreign_utxo(outpoint, Input::default(), Weight::ZERO);
+    // dbg!(t.unwrap());
+    // ub fn add_foreign_utxo(
+    //         &mut self,
+    //             outpoint: OutPoint,
+    //                 psbt_input: Input,
+    //                     satisfaction_weight: Weight,
+    // ) -> Result<&mut Self, AddForeignUtxoError>
+    let psbt = tx_builder.finish().expect("psbt thing");
+    psbt
+    // b9ea7038184e7641a77a82dde1ae74e1967b29f432e8453ff4e1bdcbf879aeb9
 }
