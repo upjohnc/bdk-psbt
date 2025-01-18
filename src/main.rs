@@ -1,4 +1,5 @@
 mod utils;
+use bdk_esplora::esplora_client::{BlockingClient, Builder};
 use bdk_wallet::bitcoin::{psbt::Input, Address, Amount, Network, Weight};
 use bdk_wallet::{KeychainKind, SignOptions};
 use std::str::FromStr;
@@ -91,7 +92,7 @@ fn main() {
 
     let mut builder = wallet_1.build_tx();
     builder
-        .add_recipient(address.script_pubkey(), Amount::from_sat(5_000))
+        .add_recipient(address.script_pubkey(), Amount::from_sat(35_000))
         .add_foreign_utxo(utxo.outpoint, psbt_input, foreign_utxo_satisfaction)
         .unwrap();
     // let w = builder_2
@@ -105,14 +106,20 @@ fn main() {
     //     .add_foreign_utxo(z, t, Weight::ZERO)
     //     // .add_foreign_utxo(utxo.outpoint, psbt_input, foreign_utxo_satisfaction)
     //     .unwrap();
-    let mut result = builder.finish().expect("finished psbt build");
+    let mut psbt = builder.finish().expect("finished psbt build");
     let _ = wallet_2
-        .sign(&mut result, SignOptions::default())
+        .sign(&mut psbt, SignOptions::default())
         .expect("sign fine");
-    let _ = wallet_1
-        .sign(&mut result, SignOptions::default())
+    let finalized = wallet_1
+        .sign(&mut psbt, SignOptions::default())
         .expect("sign fine");
-    dbg!(result);
+    assert!(finalized);
+
+    let tx = psbt.extract_tx().expect("extract the transaction");
+    let client: BlockingClient = Builder::new("https://mutinynet.com/api").build_blocking();
+    let x = client.broadcast(&tx);
+    dbg!(tx.compute_txid());
+    dbg!(x.unwrap());
 
     // println!("{:?}", z);
     //     // println!("{:?}", i.outpoint);
