@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 bdk_esplora = { version = "0.20.1", features = ["blocking"] }
 bdk_wallet = { version = "1.0.0", features = ["keys-bip39", "rusqlite"] }
+clap = { version = "4.5.26", features = ["derive"] }
